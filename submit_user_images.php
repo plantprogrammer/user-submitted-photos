@@ -52,7 +52,7 @@ function sui_form_shortcode(){
     }
   }  
 
-  echo sui_get_upload_image_form($sui_image_caption = $_POST['sui_image_caption'], $sui_image_category = $_POST['sui_image_category']);
+  echo sui_get_upload_image_form($sui_image_caption = $_POST['sui_image_caption']);
   
 }
 
@@ -148,7 +148,7 @@ function sui_parse_file_errors($file = '', $image_caption){
 
 
 
-function sui_get_upload_image_form($sui_image_caption = '', $sui_image_category = 0){
+function sui_get_upload_image_form($sui_image_caption = ''){
 
   $out = '';
   $out .= '<form id="sui_upload_image_form" method="post" action="" enctype="multipart/form-data">';
@@ -157,8 +157,6 @@ function sui_get_upload_image_form($sui_image_caption = '', $sui_image_category 
   
   $out .= '<label for="sui_image_caption">Image Caption - Letters, Numbers and Spaces</label><br/>';
   $out .= '<input type="text" id="sui_image_caption" name="sui_image_caption" value="' . $sui_image_caption . '"/><br/>';
-  $out .= '<label for="sui_image_category">Image Category</label><br/>';  
-  $out .= sui_get_image_categories_dropdown('sui_image_category', $sui_image_category) . '<br/>';
   $out .= '<label for="sui_image_file">Select Your Image - ' . MAX_UPLOAD_SIZE . ' bytes maximum</label><br/>';  
   $out .= '<input type="file" size="60" name="sui_image_file" id="sui_image_file"><br/>';
     
