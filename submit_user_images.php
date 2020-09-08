@@ -9,7 +9,8 @@ Author: Ross Elliot & Ian Sajkowicz
 Author URI: https://iansackofwits.com
 */
 
-define('MAX_UPLOAD_SIZE', 2500000);		//limit size to 2.5 megabytes; size is in bytes
+define('MAX_UPLOAD_SIZE_BYTES', 2500000);
+define('MAX_UPLOAD_SIZE_MBYTES', 2.5);
 define('TYPE_WHITELIST', serialize(array(
   'image/jpeg',
   'image/png',
@@ -22,11 +23,19 @@ add_shortcode('sui_form', 'sui_form_shortcode');
 
 function sui_form_shortcode(){
 
-
   global $current_user;
-    
+  setcookie( 'submited_image_before', 1, 500 * DAY_IN_SECONDS, COOKIEPATH, COOKIE_DOMAIN);
+  if (isset($_POST["sui_submit"])) { 
+	setcookie( 'submited_image_before', 1, 500 * DAY_IN_SECONDS, COOKIEPATH, COOKIE_DOMAIN);
+    return "<h3>Thanks for submitting your image<h3>"; 
+} 	
+  if (!isset($_COOKIE["submited_image_before"]))
+  {
+	return;  
+  }
+	
   if(isset( $_POST['sui_upload_image_form_submitted'] ) && wp_verify_nonce($_POST['sui_upload_image_form_submitted'], 'sui_upload_image_form') ){  
-
+	  
     $result = sui_parse_file_errors($_FILES['sui_image_file'], $_POST['sui_image_caption']);
     
     if($result['error']){
@@ -37,7 +46,7 @@ function sui_form_shortcode(){
 
       $user_image_data = array(
       	'post_title' => $result['caption'],
-        'post_status' => 'pending',
+        'post_status' => 'published',
         'post_author' => $current_user->ID,
         'post_type' => 'user_images'     
       );
@@ -45,9 +54,7 @@ function sui_form_shortcode(){
       if($post_id = wp_insert_post($user_image_data)){
       
         sui_process_image('sui_image_file', $post_id, $result['caption']);
-      
-        wp_set_object_terms($post_id, (int)$_POST['sui_image_category'], 'sui_image_category');
-      
+		
       }
     }
   }  
@@ -136,9 +143,9 @@ function sui_parse_file_errors($file = '', $image_caption){
   
     $result['error'] = 'Your image must be a jpeg, png or gif!';
     
-  }elseif(($file['size'] > MAX_UPLOAD_SIZE)){
-  
-    $result['error'] = 'Your image was ' . $file['size'] . ' bytes! It must not exceed ' . MAX_UPLOAD_SIZE . ' bytes.';
+  }elseif(($file['size'] > MAX_UPLOAD_SIZE_BYTES)){
+  	$file_size_me_bytes = $file['size']/1048576;
+    $result['error'] = 'Your image was ' . round($file_size_me_bytes,2) . ' megabytes! It must not exceed ' . MAX_UPLOAD_SIZE_MBYTES . ' megabytes.';
     
   }
     
@@ -149,15 +156,15 @@ function sui_parse_file_errors($file = '', $image_caption){
 
 
 function sui_get_upload_image_form($sui_image_caption = ''){
-
+  
   $out = '';
   $out .= '<form id="sui_upload_image_form" method="post" action="" enctype="multipart/form-data">';
 
   $out .= wp_nonce_field('sui_upload_image_form', 'sui_upload_image_form_submitted');
   
-  $out .= '<label for="sui_image_caption">Image Caption - Letters, Numbers and Spaces</label><br/>';
+  $out .= '<label for="sui_image_caption">Please Enter Your Image Name</label><br/>';
   $out .= '<input type="text" id="sui_image_caption" name="sui_image_caption" value="' . $sui_image_caption . '"/><br/>';
-  $out .= '<label for="sui_image_file">Select Your Image - ' . MAX_UPLOAD_SIZE . ' bytes maximum</label><br/>';  
+  $out .= '<label for="sui_image_file">Select Your Image - ' . MAX_UPLOAD_SIZE_MBYTES . ' megabytes maximum</label><br/>'; 
   $out .= '<input type="file" size="60" name="sui_image_file" id="sui_image_file"><br/>';
     
   $out .= '<input type="submit" id="sui_submit" name="sui_submit" value="Upload Image">';
