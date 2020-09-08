@@ -31,25 +31,8 @@ function sui_form_shortcode(){
     
       echo '<p>ERROR: ' . $result['error'] . '</p>';
     
-    }else{
-
-      $user_image_data = array(
-      	'post_title' => $result['caption'],
-        'post_status' => 'publish',
-        'post_author' => '1',
-        'post_type' => 'user_images'     
-      );
-      
-      if($post_id = wp_insert_post($user_image_data)){
-      
-        sui_process_image('sui_image_file', $post_id, $result['caption']);
-      }
-	  unset($_POST['sui_upload_image_form_submitted']);
     }
   }  
-  if (isset($_COOKIE["submitted_image_before"])) { 
-    return "<h3>Thanks for submitting your image<h3>"; 
-} 	
   echo sui_get_upload_image_form($sui_image_caption = $_POST['sui_image_caption']);
   
 }
@@ -161,12 +144,6 @@ function sui_get_upload_image_form($sui_image_caption = ''){
   $out .= '<input type="submit" id="sui_submit" name="sui_submit" value="Upload Image">';
 
   $out .= '</form>';
-	
-  $out .= '<script>';
-  $out .= 'document.getElementById("sui_upload_image_form").addEventListener("submit", addCookie);';
-  $out .= 'function addCookie() {var now = new Date(); now.setFullYear( now.getFullYear() + 1 );cookievalue = "true;";';
-  $out .= 'document.cookie = "submitted_image_before=" + cookievalue + "expires=" + now.toUTCString() + ";";';
-  $out .= '}</script>';
 
   return $out;
   
@@ -207,4 +184,38 @@ function sui_plugin_init(){
   
   register_post_type('user_images', $image_type_args);
 
+}
+
+add_action('template_redirect','prevent_form_resubmission');
+
+function prevent_form_resubmission()
+{
+	if(isset( $_POST['sui_upload_image_form_submitted'] ) && wp_verify_nonce($_POST['sui_upload_image_form_submitted'], 'sui_upload_image_form') )
+	{
+		$result = sui_parse_file_errors($_FILES['sui_image_file'], $_POST['sui_image_caption']);
+
+		if($result['error']){
+
+		  return;
+
+		}
+		else if (!isset($_COOKIE['submitted_image_before'])){
+
+		  $user_image_data = array(
+			'post_title' => $result['caption'],
+			'post_status' => 'publish',
+			'post_author' => '1',
+			'post_type' => 'user_images'     
+		  );
+
+		  if($post_id = wp_insert_post($user_image_data)){
+
+			sui_process_image('sui_image_file', $post_id, $result['caption']);
+		  }
+		  setcookie( 'submitted_image_before', 'true', time() + 365 * DAY_IN_SECONDS );
+		}
+		wp_redirect("http://different-flamingo.w6.wpsandbox.pro/adventures/");
+		exit;
+	
+	}
 }
