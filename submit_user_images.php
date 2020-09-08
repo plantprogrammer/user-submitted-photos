@@ -23,17 +23,6 @@ add_shortcode('sui_form', 'sui_form_shortcode');
 
 function sui_form_shortcode(){
 
-  global $current_user;
-  setcookie( 'submited_image_before', 1, 500 * DAY_IN_SECONDS, COOKIEPATH, COOKIE_DOMAIN);
-  if (isset($_POST["sui_submit"])) { 
-	setcookie( 'submited_image_before', 1, 500 * DAY_IN_SECONDS, COOKIEPATH, COOKIE_DOMAIN);
-    return "<h3>Thanks for submitting your image<h3>"; 
-} 	
-  if (!isset($_COOKIE["submited_image_before"]))
-  {
-	return;  
-  }
-	
   if(isset( $_POST['sui_upload_image_form_submitted'] ) && wp_verify_nonce($_POST['sui_upload_image_form_submitted'], 'sui_upload_image_form') ){  
 	  
     $result = sui_parse_file_errors($_FILES['sui_image_file'], $_POST['sui_image_caption']);
@@ -46,19 +35,21 @@ function sui_form_shortcode(){
 
       $user_image_data = array(
       	'post_title' => $result['caption'],
-        'post_status' => 'published',
-        'post_author' => $current_user->ID,
+        'post_status' => 'publish',
+        'post_author' => '1',
         'post_type' => 'user_images'     
       );
       
       if($post_id = wp_insert_post($user_image_data)){
       
         sui_process_image('sui_image_file', $post_id, $result['caption']);
-		
       }
+	  unset($_POST['sui_upload_image_form_submitted']);
     }
   }  
-
+  if (isset($_COOKIE["submitted_image_before"])) { 
+    return "<h3>Thanks for submitting your image<h3>"; 
+} 	
   echo sui_get_upload_image_form($sui_image_caption = $_POST['sui_image_caption']);
   
 }
@@ -170,6 +161,12 @@ function sui_get_upload_image_form($sui_image_caption = ''){
   $out .= '<input type="submit" id="sui_submit" name="sui_submit" value="Upload Image">';
 
   $out .= '</form>';
+	
+  $out .= '<script>';
+  $out .= 'document.getElementById("sui_upload_image_form").addEventListener("submit", addCookie);';
+  $out .= 'function addCookie() {var now = new Date(); now.setFullYear( now.getFullYear() + 1 );cookievalue = "true;";';
+  $out .= 'document.cookie = "submitted_image_before=" + cookievalue + "expires=" + now.toUTCString() + ";";';
+  $out .= '}</script>';
 
   return $out;
   
@@ -210,5 +207,4 @@ function sui_plugin_init(){
   
   register_post_type('user_images', $image_type_args);
 
-    
 }
