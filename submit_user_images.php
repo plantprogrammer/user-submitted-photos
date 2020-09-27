@@ -18,7 +18,7 @@ define('TYPE_WHITELIST', serialize(array(
   )));
 
 
-add_shortcode('sui_form', 'sui_form_shortcode');
+add_shortcode('adventures_upload', 'sui_form_shortcode');
 
 
 function sui_form_shortcode(){
