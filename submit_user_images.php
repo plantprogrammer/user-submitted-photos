@@ -2,7 +2,7 @@
 /*
 Plugin Name: Submit Images for Adventures
 Plugin URI: https://iansackofwits.com
-Description: Allows users to submit images for Adventures limited to 1 by IP address.
+Description: Allows users to submit images for Adventures.
 Version: 1.0
 License: GPLv2
 Author: Ross Elliot & Ian Sajkowicz  
@@ -199,11 +199,10 @@ function prevent_form_resubmission()
 		  return;
 
 		}
-		else if (!isset($_COOKIE['submitted_image_before'])){
 
 		  $user_image_data = array(
 			'post_title' => $result['caption'],
-			'post_status' => 'publish',
+			'post_status' => 'pending',
 			'post_author' => '1',
 			'post_type' => 'user_images'     
 		  );
@@ -212,10 +211,5 @@ function prevent_form_resubmission()
 
 			sui_process_image('sui_image_file', $post_id, $result['caption']);
 		  }
-		  setcookie( 'submitted_image_before', 'true', time() + 365 * DAY_IN_SECONDS );
-		}
-		wp_redirect("http://different-flamingo.w6.wpsandbox.pro/adventures/");
-		exit;
-	
 	}
 }
