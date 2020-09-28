@@ -18,7 +18,7 @@ define('TYPE_WHITELIST', serialize(array(
   )));
 
 
-add_shortcode('adventures_upload', 'sui_form_shortcode');
+add_shortcode('adventure_upload', 'sui_form_shortcode');
 
 
 function sui_form_shortcode(){
@@ -32,6 +32,19 @@ function sui_form_shortcode(){
       echo '<p>ERROR: ' . $result['error'] . '</p>';
     
     }
+	else
+	{
+		$user_image_data = array(
+			'post_title' => $result['caption'],
+			'post_status' => 'pending',
+			'post_author' => '1',
+			'post_type' => 'user_images'     
+		  );
+		  if($post_id = wp_insert_post($user_image_data)){
+
+			sui_process_image('sui_image_file', $post_id, $result['caption']);
+		  }
+	}
   }  
   echo sui_get_upload_image_form($sui_image_caption = $_POST['sui_image_caption']);
   
@@ -65,10 +78,6 @@ function sui_delete_user_images($images_to_delete){
 
 
 function sui_process_image($file, $post_id, $caption){
- 
-  require_once(ABSPATH . "wp-admin" . '/includes/image.php');
-  require_once(ABSPATH . "wp-admin" . '/includes/file.php');
-  require_once(ABSPATH . "wp-admin" . '/includes/media.php');
  
   $attachment_id = media_handle_upload($file, $post_id);
  
@@ -184,32 +193,4 @@ function sui_plugin_init(){
   
   register_post_type('user_images', $image_type_args);
 
-}
-
-add_action('template_redirect','prevent_form_resubmission');
-
-function prevent_form_resubmission()
-{
-	if(isset( $_POST['sui_upload_image_form_submitted'] ) && wp_verify_nonce($_POST['sui_upload_image_form_submitted'], 'sui_upload_image_form') )
-	{
-		$result = sui_parse_file_errors($_FILES['sui_image_file'], $_POST['sui_image_caption']);
-
-		if($result['error']){
-
-		  return;
-
-		}
-
-		  $user_image_data = array(
-			'post_title' => $result['caption'],
-			'post_status' => 'pending',
-			'post_author' => '1',
-			'post_type' => 'user_images'     
-		  );
-
-		  if($post_id = wp_insert_post($user_image_data)){
-
-			sui_process_image('sui_image_file', $post_id, $result['caption']);
-		  }
-	}
 }
