@@ -79,6 +79,10 @@ function sui_delete_user_images($images_to_delete){
 
 function sui_process_image($file, $post_id, $caption){
  
+  require_once(ABSPATH . "wp-admin" . '/includes/image.php');
+  require_once(ABSPATH . "wp-admin" . '/includes/file.php');
+  require_once(ABSPATH . "wp-admin" . '/includes/media.php');	
+	
   $attachment_id = media_handle_upload($file, $post_id);
  
   update_post_meta($post_id, '_thumbnail_id', $attachment_id);
